@@ -22,7 +22,7 @@ class LLMService:
             return f"Произошла ошибка: {str(e)}"
 
     def chat(self, message, history):
-        # history[-2:] # Берем последние два сообщения из истории, чтобы не перегружать запрос
+        # Берем последние два сообщения из истории, чтобы не перегружать запрос
         messages=[{"role": "system", "content": self.sys_prompt}] + history[-2:] + [{"role": "user", "content": message}]
         logger.info(f"Message: {messages}")
         try:
