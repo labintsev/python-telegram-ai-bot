@@ -1,5 +1,5 @@
 """
-Эхо-бот, который повторяет сообщения в Telegram.
+Бот, который отвечает на сообщения в Telegram.
 Сначала определяются несколько функций-обработчиков.
 Затем эти функции передаются в приложение и регистрируются в соответствующих местах.
 После этого бот запускается и работает до тех пор, пока вы не нажмете Ctrl-C в командной строке.
@@ -54,10 +54,19 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Chat the user message."""
+    """Chat the user message с учетом истории."""
     user_message = update.message.text
-    llm_response = llm_service.chat(user_message)
-    logger.info(f"User: {user_message}  LLM: {llm_response}")
+
+    # Получаем историю сообщений из context.chat_data
+    history = context.chat_data.get("history", [])
+
+    logger.info(f"History: {history}")
+    # Можно передать историю в llm_service, если поддерживается
+    llm_response = llm_service.chat(user_message, history=history)
+    history.append({"role": "user", "content": user_message})  # добавляем сообщение пользователя в историю
+    history.append({"role": "assistant", "content": llm_response})
+    context.chat_data["history"] = history  # сохраняем обновленную историю
+
     await update.message.reply_text(llm_response)
 
 
