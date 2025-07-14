@@ -30,7 +30,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-llm_service = LLMService()
+llm_service = LLMService("Ты оператор техподдержки, отвечай вежливо")
 
 
 # Define a few command handlers. These usually take the two arguments update and context.

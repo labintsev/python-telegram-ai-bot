@@ -3,7 +3,7 @@ import dotenv
 env = dotenv.dotenv_values(".env")
 
 class LLMService:
-    def __init__(self):
+    def __init__(self, sys_prompt=None):
         try:
             # Создаем клиент с вашим токеном
             self.client = openai.OpenAI(
@@ -11,7 +11,7 @@ class LLMService:
                 base_url="https://llm.api.cloud.yandex.net/v1",
             )
             # Формируем системный промпт
-            self.sys_prompt = "Ты оператор техподдержки, отвечай вежливо"
+            self.sys_prompt = sys_prompt
 
         except Exception as e:
             return f"Произошла ошибка: {str(e)}"
