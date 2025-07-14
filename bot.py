@@ -30,7 +30,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-llm_service = LLMService("Ты оператор техподдержки, отвечай вежливо")
+llm_service = LLMService("Ты оператор техподдержки, отвечай вежливо. ", use_data='data/data.txt')
 
 
 # Define a few command handlers. These usually take the two arguments update and context.

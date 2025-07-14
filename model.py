@@ -6,7 +6,12 @@ env = dotenv.dotenv_values(".env")
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    def __init__(self, sys_prompt=None):
+    """
+    Параметры:
+    sys_prompt - системный промпт для указания роли ассистента
+    use_data - имя файла для включения полезной информации в системный промпт
+    """
+    def __init__(self, sys_prompt=None, use_data=None):
         try:
             # Создаем клиент с вашим токеном
             self.client = openai.OpenAI(
@@ -15,6 +20,12 @@ class LLMService:
             )
             # Формируем системный промпт
             self.sys_prompt = sys_prompt
+
+            if use_data:
+                with open(use_data, encoding='utf-8') as f:
+                    data = f.read()
+                self.sys_prompt += data
+                
             # Указываем модель, которую будем использовать
             self.model = "gpt://b1g8i6bj34avp7kulp7h/yandexgpt-lite"
 
