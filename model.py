@@ -19,7 +19,7 @@ class LLMService:
             self.model = "gpt://b1g8i6bj34avp7kulp7h/yandexgpt-lite"
 
         except Exception as e:
-            return f"Произошла ошибка: {str(e)}"
+            print(f"Произошла ошибка: {str(e)}")
 
     def chat(self, message, history):
         # Берем последние два сообщения из истории, чтобы не перегружать запрос
