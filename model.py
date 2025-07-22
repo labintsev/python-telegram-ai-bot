@@ -27,14 +27,15 @@ class LLMService:
                 self.sys_prompt += data
                 
             # Указываем модель, которую будем использовать
-            self.model = "gpt://b1g8i6bj34avp7kulp7h/yandexgpt-lite"
+            self.model = f"gpt://{env['YA_FOLDER_ID']}/yandexgpt-lite"
 
         except Exception as e:
             print(f"Произошла ошибка: {str(e)}")
 
     def chat(self, message, history):
         # Берем последние два сообщения из истории, чтобы не перегружать запрос
-        messages=[{"role": "system", "content": self.sys_prompt}] + history[-2:] + [{"role": "user", "content": message}]
+        messages=[
+            {"role": "system", "content": self.sys_prompt}] + history[-2:] + [{"role": "user", "content": message}]
         logger.info(f"Message: {messages}")
         try:
             # Обращаемся к API
