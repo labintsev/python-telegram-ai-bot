@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from model import LLMService
+from model import chat_with_llm
 import dotenv
 
 env = dotenv.dotenv_values(".env")
@@ -29,8 +29,6 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
-
-llm_service = LLMService("Ты оператор техподдержки, отвечай вежливо. ", use_data='data/data.txt')
 
 
 # Define a few command handlers. These usually take the two arguments update and context.
@@ -62,7 +60,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     logger.info(f"History: {history}")
     # Можно передать историю в llm_service, если поддерживается
-    llm_response = llm_service.chat(user_message, history=history)
+    llm_response = chat_with_llm(user_message, history=history)
     history.append({"role": "user", "content": user_message})  # добавляем сообщение пользователя в историю
     history.append({"role": "assistant", "content": llm_response})
     context.chat_data["history"] = history  # сохраняем обновленную историю

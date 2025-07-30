@@ -11,7 +11,7 @@ class LLMService:
     sys_prompt - системный промпт для указания роли ассистента
     use_data - имя файла для включения полезной информации в системный промпт
     """
-    def __init__(self, sys_prompt=None, use_data=None):
+    def __init__(self, sys_prompt=None):
         try:
             # Создаем клиент с вашим токеном
             self.client = openai.OpenAI(
@@ -20,11 +20,6 @@ class LLMService:
             )
             # Формируем системный промпт
             self.sys_prompt = sys_prompt
-
-            if use_data:
-                with open(use_data, encoding='utf-8') as f:
-                    data = f.read()
-                self.sys_prompt += data
                 
             # Указываем модель, которую будем использовать
             self.model = f"gpt://{env['YA_FOLDER_ID']}/yandexgpt-lite"
@@ -51,3 +46,23 @@ class LLMService:
 
         except Exception as e:
             return f"Произошла ошибка: {str(e)}"
+
+
+with open('prompts/prompt_1.txt', encoding='utf-8') as f:
+    sys_prompt_1 = f.read()
+
+llm_1 = LLMService(sys_prompt_1)
+
+
+def chat_with_llm(user_message, history):
+    """
+    Чат с использованием сервиса LLM.
+
+    Аргументы:
+        user_message (str): Сообщение пользователя.
+
+    Возвращает:
+        str: Ответ LLM.
+    """
+    response = llm_1.chat(user_message, history)
+    return response
