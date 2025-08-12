@@ -6,6 +6,11 @@
 """
 
 import logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 from telegram import ForceReply, Update
 from telegram.ext import (
@@ -16,26 +21,22 @@ from telegram.ext import (
     filters,
 )
 
-from model import LLMService
+from model import chat_with_llm
+
 import dotenv
-
-env = dotenv.dotenv_values(".env")
-
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-# set higher logging level for httpx to avoid all GET and POST requests being logged
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
-
-llm_service = LLMService("Ты оператор техподдержки, отвечай вежливо. ", use_data='data/data.txt')
+# Загружаем переменные окружения из файла .env
+try:
+    env = dotenv.dotenv_values(".env")
+    TELEGRAM_BOT_TOKEN = env["TELEGRAM_BOT_TOKEN"]
+except FileNotFoundError:
+    raise FileNotFoundError("Файл .env не найден. Убедитесь, что он существует в корневой директории проекта.")
+except KeyError as e:
+    raise KeyError(f"Переменная окружения {str(e)} не найдена в файле .env. Проверьте его содержимое.")
 
 
-# Define a few command handlers. These usually take the two arguments update and context.
+# Определим команды и функции-обработчики сообщений
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
+    """Обработчик команды /start. При старте бота пользователь получает приветственное сообщение."""
     user = update.effective_user
     await update.message.reply_html(
         rf"Hi {user.mention_html()}!",
@@ -43,49 +44,37 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
-
-
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text)
-
-
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Chat the user message с учетом истории."""
+    """Основная функция для обработки текстовых сообщений от пользователя с целью ответа на них с помощью AI."""
     user_message = update.message.text
 
     # Получаем историю сообщений из context.chat_data
     history = context.chat_data.get("history", [])
+    logger.debug(f"History: {history}")
 
-    logger.info(f"History: {history}")
-    # Можно передать историю в llm_service, если поддерживается
-    llm_response = llm_service.chat(user_message, history=history)
-    history.append({"role": "user", "content": user_message})  # добавляем сообщение пользователя в историю
-    history.append({"role": "assistant", "content": llm_response})
+    # Передаем текущий запрос и историю сообщений в llm_service
+    llm_response = chat_with_llm(user_message, history=history)
     context.chat_data["history"] = history  # сохраняем обновленную историю
-
     await update.message.reply_text(llm_response)
 
 
 def main() -> None:
-    """Start the bot."""
-    # Create the Application and pass it your bot's token.
-    application = Application.builder().token(env["TELEGRAM_BOT_TOKEN"]).build()
-    # echo_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
-    chat_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, chat)
+    """Функция инициализации бот-приложения."""
+    # Создание основного объекта приложения Telegram API
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    # on different commands - answer in Telegram
+    # Обработчик всех текстовых сообщений без команды
+    chat_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, chat)  
+
+    # Регистрируем обработчики:
+    # Команда /start
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-
-    # on non command i.e message - echo the message on Telegram
+    # Все остальные текстовые сообщения обрабатываются chat_handler
     application.add_handler(chat_handler)
 
-    # Run the bot until the user presses Ctrl-C
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Запуск бота в режиме постоянного ожидания команд.
+    # Бот работает до прекращения программы (нажатие Ctrl-C или завершение по другому сигналу)
+    application.run_polling(allowed_updates=Update.ALL_TYPES)  
 
 
 if __name__ == "__main__":

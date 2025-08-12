@@ -1,10 +1,36 @@
 # Python Telegram AI Bot
 
-## 1. Клонирование репозитория
-Скачайте проект себе на компьютер:
-```bash
-git clone https://github.com/labintsev/python-telegram-ai-bot.git
-cd python-telegram-ai-bot
+Этот проект представляет собой Telegram-бота, который интегрирует возможности искусственного интеллекта для улучшения взаимодействия с пользователем. Бот написан на Python и использует библиотеку `python-telegram-bot` для работы с Telegram API.
+
+## Инструкции по установке
+
+1. **Клонируйте репозиторий:**
+   ```
+   git clone https://github.com/labintsev/python-telegram-ai-bot.git
+   cd python-telegram-ai-bot
+   ```
+
+2. **Создайте виртуальное окружение:**
+   ```
+   python -m venv venv
+   source venv/bin/activate  # В Windows используйте `venv\Scripts\activate`
+   ```
+
+3. **Установите зависимости:**
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. **Настройте переменные окружения:**
+   Создайте файл `.env` в корневой директории и добавьте в него токен Telegram-бота и необходимые API-ключи:
+   ```
+   TELEGRAM_BOT_TOKEN=ваш_токен_бота
+   YA_API_KEY=ваш_ai_api_key
+   ```
+
+## Инструкция по использованию
+
+Чтобы запустить бота, выполните следующую команду:
 ```
 
 ## 2. Установка Python
