@@ -6,6 +6,11 @@
 """
 
 import logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 from telegram import ForceReply, Update
 from telegram.ext import (
@@ -17,18 +22,17 @@ from telegram.ext import (
 )
 
 from model import chat_with_llm
+
 import dotenv
+# Загружаем переменные окружения из файла .env
+try:
+    env = dotenv.dotenv_values(".env")
+    TELEGRAM_BOT_TOKEN = env["TELEGRAM_BOT_TOKEN"]
+except FileNotFoundError:
+    raise FileNotFoundError("Файл .env не найден. Убедитесь, что он существует в корневой директории проекта.")
+except KeyError as e:
+    raise KeyError(f"Переменная окружения {str(e)} не найдена в файле .env. Проверьте его содержимое.")
 
-env = dotenv.dotenv_values(".env")
-
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-# set higher logging level for httpx to avoid all GET and POST requests being logged
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
 
 
 # Define a few command handlers. These usually take the two arguments update and context.
@@ -46,32 +50,24 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text("Help!")
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text)
-
-
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Chat the user message с учетом истории."""
     user_message = update.message.text
 
     # Получаем историю сообщений из context.chat_data
     history = context.chat_data.get("history", [])
+    logger.debug(f"History: {history}")
 
-    logger.info(f"History: {history}")
-    # Можно передать историю в llm_service, если поддерживается
+    # Передаем текущий запрос и историю сообщений в llm_service
     llm_response = chat_with_llm(user_message, history=history)
-    history.append({"role": "user", "content": user_message})  # добавляем сообщение пользователя в историю
-    history.append({"role": "assistant", "content": llm_response})
     context.chat_data["history"] = history  # сохраняем обновленную историю
-
     await update.message.reply_text(llm_response)
 
 
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token(env["TELEGRAM_BOT_TOKEN"]).build()
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     # echo_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
     chat_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, chat)
 
