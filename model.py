@@ -3,6 +3,7 @@ import dotenv
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 # Загружаем переменные окружения из файла .env
 try:
@@ -47,7 +48,7 @@ class LLMService:
     def chat(self, message, history):
         # Берем последние два сообщения из истории, чтобы не перегружать запрос
         messages=[
-            {"role": "system", "content": self.sys_prompt}] + history[-2:] + [{"role": "user", "content": message}]
+            {"role": "system", "content": self.sys_prompt}] + history[-4:] + [{"role": "user", "content": message}]
         logger.debug(f"Messages: {messages}")
         try:
             # Обращаемся к API
@@ -67,6 +68,8 @@ class LLMService:
 
 llm_1 = LLMService('prompts/prompt_1.txt')
 
+
+cache = {}
 
 def chat_with_llm(user_message, history):
     """
