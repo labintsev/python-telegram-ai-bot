@@ -1,6 +1,7 @@
 import openai
 import dotenv
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -64,6 +65,50 @@ class LLMService:
 
         except Exception as e:
             return f"Произошла ошибка: {str(e)}"
+
+
+class OllamaService:
+    """
+    Сервис для взаимодействия с локальным Ollama API.
+    """
+    def __init__(self, prompt_file, base_url="http://localhost:11434", model="llama3"):
+        """
+        Аргументы:
+            prompt_file (str): Путь к файлу с системным промптом.
+            base_url (str): URL Ollama API.
+            model (str): Название модели Ollama.
+        """
+        with open(prompt_file, encoding='utf-8') as f:
+            self.sys_prompt = f.read()
+        self.base_url = base_url
+        self.model = model
+
+    def chat(self, message, history):
+        """
+        Отправляет сообщение в Ollama и получает ответ.
+
+        Аргументы:
+            message (str): Сообщение пользователя.
+            history (list): История сообщений (список dict с ключами 'role' и 'content').
+
+        Возвращает:
+            str: Ответ Ollama.
+        """
+        # Формируем сообщения для Ollama (system prompt + история + новое сообщение)
+        messages = [{"role": "system", "content": self.sys_prompt}] + history[-4:] + [{"role": "user", "content": message}]
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": False
+        }
+        try:
+            response = requests.post(f"{self.base_url}/api/chat", json=payload, timeout=60)
+            response.raise_for_status()
+            data = response.json()
+            return data["message"]["content"]
+        except Exception as e:
+            logger.error(f"Ollama error: {str(e)}")
+            return f"Ошибка Ollama: {str(e)}"
 
 
 llm_1 = LLMService('prompts/prompt_1.txt')

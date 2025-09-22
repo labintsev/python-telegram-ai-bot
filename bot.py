@@ -47,7 +47,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Основная функция для обработки текстовых сообщений от пользователя с целью ответа на них с помощью AI."""
     user_message = update.message.text
-
+    user = update.effective_user.mention_html()      
+    user_message = f'Имя пользователя: {user}, Вопрос: {user_message}'
     # Получаем историю сообщений из context.chat_data
     history = context.chat_data.get("history", [])
     logger.debug(f"History: {history}")
