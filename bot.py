@@ -6,11 +6,39 @@
 """
 
 import logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
+from logging.handlers import RotatingFileHandler
+import os
+
+# Настройка логирования: файл + вывод в консоль
+log_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log_dir = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "bot.log")
+
+file_handler = RotatingFileHandler(log_file, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8")
+file_handler.setFormatter(log_formatter)
+file_handler.setLevel(logging.DEBUG)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(log_formatter)
+stream_handler.setLevel(logging.INFO)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+# Удаляем возможные хендлеры, чтобы не дублировать вывод при повторном импорте
+if root_logger.handlers:
+    root_logger.handlers.clear()
+root_logger.addHandler(file_handler)
+root_logger.addHandler(stream_handler)
+
 logger = logging.getLogger(__name__)
+
+# Запрещаем propagate, чтобы сообщения не шли в root и не писались другими глобальными хендлерами
+logger.propagate = False
+
+# Отключаем детальные логи библиотеки httpx
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 
 from telegram import ForceReply, Update
 from telegram.ext import (
@@ -47,8 +75,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Основная функция для обработки текстовых сообщений от пользователя с целью ответа на них с помощью AI."""
     user_message = update.message.text
-    user = update.effective_user.mention_html()      
-    user_message = f'Имя пользователя: {user}, Вопрос: {user_message}'
+    user = update.effective_user.first_name     
+    user_message = f'{user_message}. Имя пользователя: {user}'
     # Получаем историю сообщений из context.chat_data
     history = context.chat_data.get("history", [])
     logger.debug(f"History: {history}")
