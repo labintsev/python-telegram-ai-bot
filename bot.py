@@ -36,9 +36,9 @@ logger = logging.getLogger(__name__)
 # Запрещаем propagate, чтобы сообщения не шли в root и не писались другими глобальными хендлерами
 logger.propagate = False
 
-# Отключаем детальные логи библиотеки httpx
+# Отключаем детальные логи библиотеки httpcore
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-
 
 from telegram import ForceReply, Update
 from telegram.ext import (
