@@ -71,7 +71,7 @@ class OllamaService:
     """
     Сервис для взаимодействия с локальным Ollama API.
     """
-    def __init__(self, prompt_file, base_url="http://localhost:11434", model="llama3"):
+    def __init__(self, prompt_file, base_url="http://localhost:11434", model="gemma3:1b"):
         """
         Аргументы:
             prompt_file (str): Путь к файлу с системным промптом.
@@ -114,15 +114,13 @@ class OllamaService:
 llm_1 = LLMService('prompts/prompt_1.txt')
 
 
-cache = {}
-
 def chat_with_llm(user_message, history):
     """
     Чат с использованием сервиса LLM.
-
+    К переменной history добавляется сообщение пользователя и ответ LLM. 
     Аргументы:
         user_message (str): Сообщение пользователя.
-
+        history (list): История сообщений. 
     Возвращает:
         str: Ответ LLM.
     """
